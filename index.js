@@ -7,7 +7,6 @@ var Cam = require('onvif').Cam;
 var cam = new Cam({hostname: '192.168.1.38',username: 'admin',password: 'admin',port:'2000'});
 
 app.get('/', function (req, res) {
-	res.send("hello world")
 	cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
 		res.send('<html><body><embed type="application/x-vlc-plugin" target="' + stream.uri + '"></embed></boby></html>');
 	});
