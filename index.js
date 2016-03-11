@@ -3,18 +3,29 @@ var app = express();
 
 app.set('port', (process.env.PORT || 5000));
 
-app.use(express.static(__dirname + '/public'));
+var Cam = require('onvif').Cam,
+express = require('express');
+var app = express();
 
-// views is directory for all template files
-app.set('views', __dirname + '/views');
-app.set('view engine', 'ejs');
+// var cam = new Cam({hostname: '192.168.1.38',username: 'admin',password: 'admin',port:'2000'});
 
-app.get('/', function(request, response) {
-  response.render('pages/index');
+app.get('/', function (req, res) {
+	res.send("hello world")
+	// cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
+		// res.send('<html><body><embed type="application/x-vlc-plugin" target="' + stream.uri + '"></embed></boby></html>');
+	// });
 });
 
-app.listen(app.get('port'), function() {
+// app.get('/move', function (req, res) {
+	// var x = req.query.x;
+	// var y = req.query.y;
+	// cam.continuousMove({x:x,y:y,zoom:1});
+	// res.send("moving the camera");
+// });
+
+app.listen(app.get('port'), function () {
   console.log('Node app is running on port', app.get('port'));
-});
+}); 
+
 
 
