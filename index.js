@@ -4,7 +4,7 @@ var app = express();
 app.set('port', (process.env.PORT || 5000));
 
 var Cam = require('onvif').Cam;
-var cam = new Cam({hostname: '192.168.1.38',username: 'admin',password: 'admin',port:'2000'});
+var cam = new Cam({hostname: '176.86.90.106',username: 'admin',password: 'admin',port:'2000'});
 
 app.get('/', function (req, res) {
 	cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
