@@ -5,13 +5,13 @@ app.use(cors());
 
 app.set('port', (process.env.PORT || 5000));
 
-var Cam = require('onvif').Cam;
-var cam = new Cam({hostname: '192.168.1.38',username: 'admin',password: 'admin',port:'2000'});
+// var Cam = require('onvif').Cam;
+// var cam = new Cam({hostname: '192.168.1.38',username: 'admin',password: 'admin',port:'2000'});
 
 app.get('/livestreaming', function (req, res) {
-	cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
-		res.send('<embed type="application/x-vlc-plugin" target="' + stream.uri + '"></embed>');
-	});
+	// cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
+		res.send('<iframe width="420" height="345" src="http://www.youtube.com/embed/XGSy3_Czz8k"></iframe>');
+	// });
 });
 
 app.get('/movecamera', function (req, res) {
