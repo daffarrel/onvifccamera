@@ -8,7 +8,6 @@ var jsonParser = bodyParser.json()
 app.use(bodyParser.json({ type: 'application/*+json' }))
 app.set('port', (process.env.PORT || 5000));
 
-<<<<<<< HEAD
 var Cam = require('onvif').Cam;
 var cam = null;
 
@@ -55,16 +54,6 @@ app.get('/livestreaming', function (req, res) {
 	console.log(err);
 		res.send('<embed type="application/x-vlc-plugin" target="' + stream.uri + '"></embed>');
 	});
-=======
-// var Cam = require('onvif').Cam;
-// var cam = new Cam({hostname: '192.168.1.38',username: 'admin',password: 'admin',port:'2000'});
-
-app.get('/livestreaming', function (req, res) {
-	// cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
-		res.send('<iframe width="420" height="345" src="http://www.youtube.com/embed/XGSy3_Czz8k"></iframe>');
-	// });
->>>>>>> c98d8ad3b5d4184af3d48f0d6366cd1ebdd89fef
-});
 
 app.get('/movecamera', function (req, res) {
 	var x = req.query.x;
