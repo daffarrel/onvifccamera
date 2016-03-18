@@ -51,24 +51,27 @@ app.post('/connect',jsonParser, function (req, res) {
 });
 
 app.get('/livestreaming', function (req, res) {
-	cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
-	console.log(err);
-		res.send('<embed type="application/x-vlc-plugin" target="' + stream.uri + '"></embed>');
-	});
+	if(cam !== null) {
+		cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
+			res.send('<embed type="application/x-vlc-plugin" target="' + stream.uri + '"></embed>');
+		});
+	} else {
+		res.send('connect the camera');
+	}
 });
 
 app.get('/movecamera', function (req, res) {
-	var x = req.query.x;
-	var y = req.query.y;
-	cam.continuousMove({x:x,y:y,zoom:1});
-	res.send("moving the camera");
+	if(cam !== null) {
+		var x = req.query.x;
+		var y = req.query.y;
+		cam.continuousMove({x:x,y:y,zoom:1});
+		res.send("moving the camera");
+	} else {
+		res.send('connect the camera');
+	}
 });
 
 app.delete('/disconnect', function (req, res) {
 	cam = null;
 	res.send("disconnected");
 });
-
-
-
-
