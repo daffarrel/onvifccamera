@@ -5,10 +5,14 @@ var onvif = require('onvif');
 var bodyParser = require('body-parser')
 
 app.use(cors());
-app.use(bodyParser.json({ type: 'application/*+json' }))
+
 app.set('port', (process.env.PORT || 5000));
 
 var jsonParser = bodyParser.json();
+var urlencodedParser = bodyParser.urlencoded({ extended: false });
+app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
+  extended: true
+})); 
 var Cam = require('onvif').Cam;
 var cam = null;
 
@@ -45,7 +49,7 @@ app.get('/search', function (req, res) {
 	});
 });
 
-app.post('/connect',jsonParser, function (req, res) {
+app.post('/connect',jsonParser,function (req, res) {
 	cam = new Cam(req.body);	
 	res.send("connected successfully");
 });
@@ -74,4 +78,15 @@ app.get('/movecamera', function (req, res) {
 app.delete('/disconnect', function (req, res) {
 	cam = null;
 	res.send("disconnected");
+});
+
+app.post('/authenticate',urlencodedParser,function (req, res) {
+	var username = req.body.username;	
+	var password = req.body.password;
+	console.log(req.body)
+	if(username === "admin" && password === "admin"){
+		res.json({"status":"success"});
+	} else {
+		res.json({"status":"failure"});
+	}
 });
