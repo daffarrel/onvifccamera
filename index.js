@@ -3,11 +3,12 @@ var cors = require('cors')
 var app = express();
 var onvif = require('onvif');
 var bodyParser = require('body-parser')
+
 app.use(cors());
-var jsonParser = bodyParser.json()
 app.use(bodyParser.json({ type: 'application/*+json' }))
 app.set('port', (process.env.PORT || 5000));
 
+var jsonParser = bodyParser.json();
 var Cam = require('onvif').Cam;
 var cam = null;
 
@@ -16,9 +17,9 @@ app.listen(app.get('port'), function () {
 }); 
 
 app.get('/', function (req, res) {
-		res.send("welcome to IP camera");		
-	});
+	res.send("welcome to IP camera");		
 });
+
 app.get('/search', function (req, res) {
 	onvif.Discovery.probe(function(err, cams) {
 	// function would be called only after timeout (5 sec by default) 
@@ -54,6 +55,7 @@ app.get('/livestreaming', function (req, res) {
 	console.log(err);
 		res.send('<embed type="application/x-vlc-plugin" target="' + stream.uri + '"></embed>');
 	});
+});
 
 app.get('/movecamera', function (req, res) {
 	var x = req.query.x;
