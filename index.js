@@ -15,6 +15,10 @@ app.listen(app.get('port'), function () {
   console.log('Node app is running on port', app.get('port'));
 }); 
 
+app.get('/', function (req, res) {
+		res.send("welcome to IP camera");		
+	});
+});
 app.get('/search', function (req, res) {
 	onvif.Discovery.probe(function(err, cams) {
 	// function would be called only after timeout (5 sec by default) 
