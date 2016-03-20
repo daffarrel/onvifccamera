@@ -2,19 +2,17 @@ var express = require('express');
 var cors = require('cors')
 var app = express();
 var onvif = require('onvif');
-var bodyParser = require('body-parser')
+var bodyParser = require('body-parser');
+var session = require('express-session');
 
 app.use(cors());
-
 app.set('port', (process.env.PORT || 5000));
 
 var jsonParser = bodyParser.json();
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
-app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-  extended: true
-})); 
+
 var Cam = require('onvif').Cam;
-var cam = null;
+var cam;
 
 app.listen(app.get('port'), function () {
   console.log('Node app is running on port', app.get('port'));
@@ -31,36 +29,55 @@ app.get('/search', function (req, res) {
 		var jsonObject ='[';
 		var count = 0;
 		var len = cams.length;
-		cams.forEach(function(cam) {
+		
+		var getDeviceInfo = function(cam,hardwareId,serialNumber){
+			console.log(hardwareId,serialNumber);
 			count++;
 			jsonObject +='{';
 			jsonObject +='"hostname":"'+cam.hostname+'",';
-			jsonObject +='"username":"'+cam.username+'",';
-			jsonObject +='"password":"'+cam.password+'",';
-			jsonObject +='"port":"'+cam.port+'"';
-			if(count==len)
-				jsonObject +="}";
-			else
-				jsonObject +="},";		
+			jsonObject +='"port":"'+cam.port+'",';
+			jsonObject +='"hardwareId":"'+hardwareId+'",';
+			jsonObject +='"serialNumber":"'+serialNumber+'"';
+			
+			if(count==len) {
+				jsonObject +="}]";
+				console.log(jsonObject);
+				res.json(JSON.parse(jsonObject));	
+			} else {
+				jsonObject +="},";
+			}	
+		
+		};
+		cams.forEach(function(cam) {
+			var hardwareId,serialNumber;
+			cam.getDeviceInformation(function(a,b,c){
+				hardwareId = b.hardwareId;
+				serialNumber = b.serialNumber;
+				getDeviceInfo(cam,hardwareId,serialNumber);
+			});				
 		});	
-		jsonObject +=']';
-		console.log(jsonObject);	
-		res.json(JSON.parse(jsonObject));		
+				
 	});
 });
 
 app.post('/connect',jsonParser,function (req, res) {
-	cam = new Cam(req.body);	
-	res.send("connected successfully");
+	cam = new Cam(req.body,function(err){
+		if(err ===  null){
+			res.json({"status":"success"});
+		}else{
+			res.json({"error":err.code});
+		}
+	});	
+	
 });
 
 app.get('/livestreaming', function (req, res) {
 	if(cam !== null) {
 		cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
-			res.send('<embed type="application/x-vlc-plugin" target="' + stream.uri + '"></embed>');
+			res.send('<embed width="100%" type="application/x-vlc-plugin" target="' + stream.uri + '"></embed>');
 		});
 	} else {
-		res.send('connect the camera');
+		res.json({"error":"connect to camera"});
 	}
 });
 
@@ -80,12 +97,11 @@ app.delete('/disconnect', function (req, res) {
 	res.send("disconnected");
 });
 
-app.post('/authenticate',urlencodedParser,function (req, res) {
+app.post('/authenticate',jsonParser,function (req, res) {
 	var username = req.body.username;	
 	var password = req.body.password;
-	console.log(req.body)
 	if(username === "admin" && password === "admin"){
-		res.json({"status":"success"});
+		res.json({"status":"success","username":username});
 	} else {
 		res.json({"status":"failure"});
 	}
