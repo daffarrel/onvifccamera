@@ -1,22 +1,38 @@
-var express = require('express');
-var cors = require('cors')
-var app = express();
-var onvif = require('onvif');
-var bodyParser = require('body-parser');
-var session = require('express-session');
-
+var express = require('express'),
+	cors = require('cors'),
+	app = express(),
+	onvif = require('onvif'),
+	bodyParser = require('body-parser'),
+	session = require('express-session'),
+	Cam = require('onvif').Cam,
+	Stream = require('node-rtsp-stream');
+	
 app.use(cors());
 app.set('port', (process.env.PORT || 5000));
 
 var jsonParser = bodyParser.json();
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
 
-var Cam = require('onvif').Cam;
 var cam;
 
 app.listen(app.get('port'), function () {
   console.log('Node app is running on port', app.get('port'));
 }); 
+
+var stream = null;
+var startStream =  function(url){
+	var streamObject = {
+		name: 'name',
+		streamUrl: url,
+		wsPort: 9999
+	}
+	if(stream === null) {		
+		stream = new Stream(streamObject);
+	} else {
+		stream.wsServer.close();	
+		stream = new Stream(streamObject);		
+	}
+}
 
 app.get('/', function (req, res) {
 	res.send("welcome to IP camera");		
@@ -74,7 +90,7 @@ app.post('/connect',jsonParser,function (req, res) {
 app.get('/livestreaming', function (req, res) {
 	if(cam !== null) {
 		cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
-			res.send('<embed width="100%" type="application/x-vlc-plugin" target="' + stream.uri + '"></embed>');
+			startStream(stream);
 		});
 	} else {
 		res.json({"error":"connect to camera"});

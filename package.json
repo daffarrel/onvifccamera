@@ -1,7 +1,7 @@
 {
-  "name": "node-js-getting-started",
+  "name": "onvifcamera",
   "version": "0.1.5",
-  "description": "A sample Node.js app using Express 4",
+  "description": "onvif Server",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -12,7 +12,8 @@
     "onvif":"0.4.0",
 	"cors":"2.7.1",
 	"body-parser":"1.15.0",
-	"express-session": "1.13.0"
+	"express-session": "1.13.0",
+	"node-rtsp-stream": "0.0.3"
   },
   "engines": {
     "node": "0.12.7"
