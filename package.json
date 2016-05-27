@@ -2,6 +2,9 @@
   "name": "BeliaAppServer",
   "version": "0.1.5",
   "description": "AppServer for Belia App",
+  "name": "onvifcamera",
+  "version": "0.1.5",
+  "description": "onvif Server",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
