@@ -4,6 +4,7 @@ var app = express();
 var onvif = require('onvif');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var mysql = require('mysql');
 
 app.use(cors());
 app.set('port', (process.env.PORT || 5000));
@@ -22,87 +23,78 @@ app.get('/', function (req, res) {
 	res.send("welcome to IP camera");		
 });
 
-app.get('/search', function (req, res) {
-	onvif.Discovery.probe(function(err, cams) {
-	// function would be called only after timeout (5 sec by default) 
-		if (err) { throw err; }	
-		var jsonObject ='[';
-		var count = 0;
-		var len = cams.length;
-		
-		var getDeviceInfo = function(cam,hardwareId,serialNumber){
-			console.log(hardwareId,serialNumber);
-			count++;
-			jsonObject +='{';
-			jsonObject +='"hostname":"'+cam.hostname+'",';
-			jsonObject +='"port":"'+cam.port+'",';
-			jsonObject +='"hardwareId":"'+hardwareId+'",';
-			jsonObject +='"serialNumber":"'+serialNumber+'"';
-			
-			if(count==len) {
-				jsonObject +="}]";
-				console.log(jsonObject);
-				res.json(JSON.parse(jsonObject));	
-			} else {
-				jsonObject +="},";
-			}	
-		
-		};
-		cams.forEach(function(cam) {
-			var hardwareId,serialNumber;
-			cam.getDeviceInformation(function(a,b,c){
-				hardwareId = b.hardwareId;
-				serialNumber = b.serialNumber;
-				getDeviceInfo(cam,hardwareId,serialNumber);
-			});				
-		});	
-				
-	});
+var con = mysql.createConnection({
+	host: "localhost",
+	user: "root",
+	password: "",
+	database: "onvif"
 });
-
-app.post('/connect',jsonParser,function (req, res) {
-	cam = new Cam(req.body,function(err){
-		if(err ===  null){
-			res.json({"status":"success"});
-		}else{
-			res.json({"error":err.code});
-		}
-	});	
-	
-});
-
-app.get('/livestreaming', function (req, res) {
-	if(cam !== null) {
-		cam.getStreamUri({protocol:'RTSP'}, function(err, stream) {
-			res.send('<embed width="100%" type="application/x-vlc-plugin" target="' + stream.uri + '"></embed>');
-		});
-	} else {
-		res.json({"error":"connect to camera"});
-	}
-});
-
-app.get('/movecamera', function (req, res) {
-	if(cam !== null) {
-		var x = req.query.x;
-		var y = req.query.y;
-		cam.continuousMove({x:x,y:y,zoom:1});
-		res.send("moving the camera");
-	} else {
-		res.send('connect the camera');
-	}
-});
-
-app.delete('/disconnect', function (req, res) {
-	cam = null;
-	res.send("disconnected");
-});
-
 app.post('/authenticate',jsonParser,function (req, res) {
 	var username = req.body.username;	
+	var password = req.body.password;	
+	con.query('SELECT COUNT(*) as count FROM users where email=? and password=?', [username,password],function (error, rows) {
+		if(error) {
+			throw err;
+		}
+		if(rows[0].count){
+			res.json({"status":"success","username":username});
+		} else {
+			res.json({"status":"please enter valid username and password"});
+		}
+	});
+});
+app.post('/register',jsonParser,function (req, res) {	
+	var email = req.body.email;	
 	var password = req.body.password;
-	if(username === "admin" && password === "admin"){
-		res.json({"status":"success","username":username});
-	} else {
-		res.json({"status":"failure"});
-	}
+	var mobile = req.body.mobile;
+	var country = req.body.country;	
+	var userDetails = { email:email, password: password,mobile: mobile,country:country};
+	console.log(userDetails)
+	con.query('INSERT INTO users SET ?', userDetails, function(error,res){
+		if(error) throw error;
+		console.log('Last insert ID:', res.insertId);
+	});
+	res.json({"status":"registered successfully"});
+});
+app.post('/addCamera',jsonParser,function (req, res) {	
+	var cameraid = req.body.cameraid;
+	var userid = req.body.userid;	
+	console.log(userid)
+	var camera = { userid:userid, cameraid: cameraid };
+	console.log(camera)
+	con.query('INSERT INTO cameras SET ?', camera, function(error,res){
+		if(error) throw err;
+		console.log('Last insert ID:', res.insertId);
+	});
+	res.json({"status":"camera added successfully"});
+});
+app.get('/getUserId',jsonParser,function (req, res) {	
+	var useremail = req.query.useremail;	
+	con.query('SELECT id FROM users where email=?', [useremail],function (error, rows) {
+		if(error)throw err;
+		var userid = rows[0].id;
+		console.log(userid);
+		res.json({"id":userid});
+	});
+});
+app.get('/myCameras',jsonParser,function (req, res) {	
+	var userid = req.query.id;	
+	con.query('SELECT cameraid FROM cameras where userid=?', [userid],function (error, rows) {
+		if(error) throw err;
+		console.log(rows.length);
+		var jsonResponse = '[';
+		var count =0;
+		for (var i = 0; i < rows.length; i++) {
+			count++;			
+			if(rows.length == count){
+				jsonResponse += '{"cameraid":"'+rows[i].cameraid+'"}';
+			}else{				
+				jsonResponse += '{"cameraid":"'+rows[i].cameraid+'"},';
+			}			
+		}
+		jsonResponse += ']';
+		var parsedJson = JSON.parse(jsonResponse);
+		console.log(parsedJson);
+		res.json(parsedJson);
+	});
 });
