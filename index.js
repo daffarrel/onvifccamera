@@ -7,7 +7,7 @@ var session = require('express-session');
 var mysql = require('mysql');
 
 app.use(cors());
-app.set('port', (process.env.PORT || 5000));
+app.set('port', (process.env.PORT || 80));
 
 var jsonParser = bodyParser.json();
 var urlencodedParser = bodyParser.urlencoded({ extended: false });
@@ -27,15 +27,13 @@ var con = mysql.createConnection({
 	host: "localhost",
 	user: "root",
 	password: "",
-	database: "onvif"
+	database: "belia"
 });
 app.post('/authenticate',jsonParser,function (req, res) {
 	var username = req.body.username;	
 	var password = req.body.password;	
 	con.query('SELECT COUNT(*) as count FROM users where email=? and password=?', [username,password],function (error, rows) {
-		if(error) {
-			throw err;
-		}
+		if(error) throw "unable to process query";
 		if(rows[0].count){
 			res.json({"status":"success","username":username});
 		} else {
@@ -49,9 +47,9 @@ app.post('/register',jsonParser,function (req, res) {
 	var mobile = req.body.mobile;
 	var country = req.body.country;	
 	var userDetails = { email:email, password: password,mobile: mobile,country:country};
-	console.log(userDetails)
+	console.log(userDetails);
 	con.query('INSERT INTO users SET ?', userDetails, function(error,res){
-		if(error) throw error;
+		if(error) throw "unable to process query";
 		console.log('Last insert ID:', res.insertId);
 	});
 	res.json({"status":"registered successfully"});
@@ -63,7 +61,7 @@ app.post('/addCamera',jsonParser,function (req, res) {
 	var camera = { userid:userid, cameraid: cameraid };
 	console.log(camera)
 	con.query('INSERT INTO cameras SET ?', camera, function(error,res){
-		if(error) throw err;
+		if(error) throw "unable to process query";
 		console.log('Last insert ID:', res.insertId);
 	});
 	res.json({"status":"camera added successfully"});
@@ -71,7 +69,7 @@ app.post('/addCamera',jsonParser,function (req, res) {
 app.get('/getUserId',jsonParser,function (req, res) {	
 	var useremail = req.query.useremail;	
 	con.query('SELECT id FROM users where email=?', [useremail],function (error, rows) {
-		if(error)throw err;
+		if(error) throw "unable to process query";
 		var userid = rows[0].id;
 		console.log(userid);
 		res.json({"id":userid});
@@ -80,7 +78,7 @@ app.get('/getUserId',jsonParser,function (req, res) {
 app.get('/myCameras',jsonParser,function (req, res) {	
 	var userid = req.query.id;	
 	con.query('SELECT cameraid FROM cameras where userid=?', [userid],function (error, rows) {
-		if(error) throw err;
+		if(error) throw error;
 		console.log(rows.length);
 		var jsonResponse = '[';
 		var count =0;
